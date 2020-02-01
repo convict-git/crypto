@@ -3,6 +3,7 @@
 #include <string>
 #include <algorithm>
 #include <cstring>
+#include <bitset>
 using namespace std;
 
 const string sepr = "-----------------------------------------------------";
@@ -67,28 +68,19 @@ const int IN_BITS = 6, OUT_BITS = 4;
 This lookup stores the frequency of a deltaY for a fixed (SBox_idx, deltaX) */
 int DDT[8][1 << IN_BITS][1 << OUT_BITS];
 
-/* Example x=011011, it gives 01, since we index 011011 using 0xxxx1 in the Sbox, 
+/* Example x=011011, it gives 01, since we index 011011 using 0xxxx1 in the Sbox,
 This is the row index in Sbox */
 inline int row_idx (int x) {
   return (x & 1) + (((x >> (IN_BITS - 1)) & 1) << 1);
 }
 
-/* Example x=011011, it gives 1101, since we index 011011 using x1101x in the Sbox, 
+/* Example x=011011, it gives 1101, since we index 011011 using x1101x in the Sbox,
 This is the column index in Sbox */
 inline int col_idx (int x) {
   return (x >> 1) & ((1 << (IN_BITS - 2)) - 1);
 }
 
-/* helper function to represent number in Base 2 format */
-string bit_rep (int x) {
-  string s = "";
-  while (x) s += ((x & 1) ? "1" : "0"), x >>= 1;
-  while ((int)s.size() < IN_BITS) s += "0";
-  reverse(s.begin(), s.end());
-  return s;
-}
-
-/* Gives xor of two number x and y */ 
+/* Gives xor of two number x and y */
 inline int XOR (int x, int y) { return x ^ y; }
 void showDDT();
 void calculateDDT();
@@ -100,11 +92,12 @@ signed main() {
   return EXIT_SUCCESS;
 }
 
+/*Function that fills up DDT*/
 void calculateDDT() {
   memset(DDT, 0, sizeof(DDT));                                      // Initiallizing all entries as 0
 
   for (int sbox_idx = 0; sbox_idx < 8; ++sbox_idx) {                // for each Sbox out of 8
-    for (int X = 0; X < (1 << IN_BITS); ++X) {                      // Fix some X from [0, 2^6 - 1]                                                 
+    for (int X = 0; X < (1 << IN_BITS); ++X) {                      // Fix some X from [0, 2^6 - 1]
       int Y = Sbox[sbox_idx][row_idx(X)][col_idx(X)];               // Get Y corresponding to the above fixed X and Sbox
 
       for (int Xdash = 0; Xdash < (1 << IN_BITS); ++Xdash) {        // Fix some X' from [0, 2^6 - 1]
@@ -123,12 +116,12 @@ void showDDT() {
     cout << sepr << " Sbox : " << sbox_idx + 1 << sepr << endl;
     cout << "deltaX/deltaY" << setw(10);
     for (int deltaY = 0; deltaY < (1 << OUT_BITS); ++deltaY) {
-      cout << bit_rep(deltaY) << "  ";
+      cout << bitset<4>(deltaY) << setw(4) << " ";
     }
     cout << endl;
 
     for (int i = 0; i < (1 << IN_BITS); ++i) {
-      cout << setw(12) << bit_rep(i) << " :";
+      cout << setw(12) << bitset<6>(i) << " :";
       for (int j = 0; j < (1 << OUT_BITS); ++j) {
         cout << setw(7) << DDT[sbox_idx][i][j] << " ";
       }
